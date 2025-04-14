@@ -1,3 +1,4 @@
+import * as cdk from 'aws-cdk-lib';
 import { Stack, StackProps, aws_dynamodb as ddb, aws_lambda as lambda, aws_apigateway as apigw, aws_s3 as s3 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 

@@ -25,6 +25,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const cdk = __importStar(require("aws-cdk-lib"));
-const main_stack_1 = require("./lib/main-stack");
+const main_stack_1 = require("../lib/main-stack");
 const app = new cdk.App();
 new main_stack_1.MainStack(app, 'MainStack');

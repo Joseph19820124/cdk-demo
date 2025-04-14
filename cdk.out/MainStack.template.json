@@ -1,0 +1,1344 @@
+{
+ "Resources": {
+  "EventsTableD24865E5": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "id",
+      "AttributeType": "S"
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "id",
+      "KeyType": "HASH"
+     }
+    ],
+    "ProvisionedThroughput": {
+     "ReadCapacityUnits": 5,
+     "WriteCapacityUnits": 5
+    },
+    "TableName": "TimelineEvents"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "MainStack/EventsTable/Resource"
+   }
+  },
+  "ImageBucket97210811": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "timeline-image-storage",
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "MainStack/ImageBucket/Resource"
+   }
+  },
+  "ImageBucketPolicy9E7B0384": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "ImageBucket97210811"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ImageBucket97210811",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ImageBucket97210811",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/ImageBucket/Policy/Resource"
+   }
+  },
+  "ImageBucketAutoDeleteObjectsCustomResource99A1E17B": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "ImageBucket97210811"
+    }
+   },
+   "DependsOn": [
+    "ImageBucketPolicy9E7B0384"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "MainStack/ImageBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "a657308e723bb9460b800cb3b47dadb74e28243edfe246bf7755c45ec312eb97.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "ImageBucket97210811"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "MainStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.a657308e723bb9460b800cb3b47dadb74e28243edfe246bf7755c45ec312eb97",
+    "aws:asset:property": "Code"
+   }
+  },
+  "EventHandlerServiceRoleCBDA638E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/EventHandler/ServiceRole/Resource"
+   }
+  },
+  "EventHandlerServiceRoleDefaultPolicyDAB06F93": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "EventsTableD24865E5",
+          "Arn"
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EventHandlerServiceRoleDefaultPolicyDAB06F93",
+    "Roles": [
+     {
+      "Ref": "EventHandlerServiceRoleCBDA638E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/EventHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "EventHandler0ACBF035": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "1a3497f630f79600b37ce817a32453492fcab3deaf91ab009507c52e06a4c415.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "EVENTS_TABLE": {
+       "Ref": "EventsTableD24865E5"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "EventHandlerServiceRoleCBDA638E",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x"
+   },
+   "DependsOn": [
+    "EventHandlerServiceRoleDefaultPolicyDAB06F93",
+    "EventHandlerServiceRoleCBDA638E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "MainStack/EventHandler/Resource",
+    "aws:asset:path": "asset.1a3497f630f79600b37ce817a32453492fcab3deaf91ab009507c52e06a4c415",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "TimelineApiE63529F7": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Name": "Timeline Service"
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Resource"
+   }
+  },
+  "TimelineApiCloudWatchRole7A1FCBDF": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/CloudWatchRole/Resource"
+   }
+  },
+  "TimelineApiAccount300FFF56": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "TimelineApiCloudWatchRole7A1FCBDF",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "TimelineApiE63529F7"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Account"
+   }
+  },
+  "TimelineApiDeploymentF1DD5BE80221b7c7f464f8ac35f668758c7694b6": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "Automatically created by the RestApi construct",
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "DependsOn": [
+    "TimelineApieventsidDELETE14980D25",
+    "TimelineApieventsidGET7DAE9344",
+    "TimelineApieventsidPUT1BD2D63B",
+    "TimelineApieventsid7E518E6C",
+    "TimelineApieventsGET9699C152",
+    "TimelineApieventsPOSTB0FE520B",
+    "TimelineApievents6574963A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Deployment/Resource"
+   }
+  },
+  "TimelineApiDeploymentStageprodCB7C4279": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "TimelineApiDeploymentF1DD5BE80221b7c7f464f8ac35f668758c7694b6"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "TimelineApiAccount300FFF56"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "TimelineApievents6574963A": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "TimelineApiE63529F7",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "events",
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/Resource"
+   }
+  },
+  "TimelineApieventsGETApiPermissionMainStackTimelineApi9601C4E1GETeventsE3B64FD1": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/",
+       {
+        "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+       },
+       "/GET/events"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/GET/ApiPermission.MainStackTimelineApi9601C4E1.GET..events"
+   }
+  },
+  "TimelineApieventsGETApiPermissionTestMainStackTimelineApi9601C4E1GETevents041E0444": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/test-invoke-stage/GET/events"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/GET/ApiPermission.Test.MainStackTimelineApi9601C4E1.GET..events"
+   }
+  },
+  "TimelineApieventsGET9699C152": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "EventHandler0ACBF035",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "TimelineApievents6574963A"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/GET/Resource"
+   }
+  },
+  "TimelineApieventsPOSTApiPermissionMainStackTimelineApi9601C4E1POSTevents6840DF56": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/",
+       {
+        "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+       },
+       "/POST/events"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/POST/ApiPermission.MainStackTimelineApi9601C4E1.POST..events"
+   }
+  },
+  "TimelineApieventsPOSTApiPermissionTestMainStackTimelineApi9601C4E1POSTeventsD878E95F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/test-invoke-stage/POST/events"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/POST/ApiPermission.Test.MainStackTimelineApi9601C4E1.POST..events"
+   }
+  },
+  "TimelineApieventsPOSTB0FE520B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "EventHandler0ACBF035",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "TimelineApievents6574963A"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/POST/Resource"
+   }
+  },
+  "TimelineApieventsid7E518E6C": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "TimelineApievents6574963A"
+    },
+    "PathPart": "{id}",
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/Resource"
+   }
+  },
+  "TimelineApieventsidGETApiPermissionMainStackTimelineApi9601C4E1GETeventsid81EF4FA9": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/",
+       {
+        "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+       },
+       "/GET/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/GET/ApiPermission.MainStackTimelineApi9601C4E1.GET..events.{id}"
+   }
+  },
+  "TimelineApieventsidGETApiPermissionTestMainStackTimelineApi9601C4E1GETeventsid32D24D42": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/test-invoke-stage/GET/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/GET/ApiPermission.Test.MainStackTimelineApi9601C4E1.GET..events.{id}"
+   }
+  },
+  "TimelineApieventsidGET7DAE9344": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "EventHandler0ACBF035",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "TimelineApieventsid7E518E6C"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/GET/Resource"
+   }
+  },
+  "TimelineApieventsidPUTApiPermissionMainStackTimelineApi9601C4E1PUTeventsid61712C5B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/",
+       {
+        "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+       },
+       "/PUT/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/PUT/ApiPermission.MainStackTimelineApi9601C4E1.PUT..events.{id}"
+   }
+  },
+  "TimelineApieventsidPUTApiPermissionTestMainStackTimelineApi9601C4E1PUTeventsidCF754831": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/test-invoke-stage/PUT/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/PUT/ApiPermission.Test.MainStackTimelineApi9601C4E1.PUT..events.{id}"
+   }
+  },
+  "TimelineApieventsidPUT1BD2D63B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "EventHandler0ACBF035",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "TimelineApieventsid7E518E6C"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/PUT/Resource"
+   }
+  },
+  "TimelineApieventsidDELETEApiPermissionMainStackTimelineApi9601C4E1DELETEeventsid67ACFB30": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/",
+       {
+        "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+       },
+       "/DELETE/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/DELETE/ApiPermission.MainStackTimelineApi9601C4E1.DELETE..events.{id}"
+   }
+  },
+  "TimelineApieventsidDELETEApiPermissionTestMainStackTimelineApi9601C4E1DELETEeventsid84931A1B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "EventHandler0ACBF035",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "TimelineApiE63529F7"
+       },
+       "/test-invoke-stage/DELETE/events/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/DELETE/ApiPermission.Test.MainStackTimelineApi9601C4E1.DELETE..events.{id}"
+   }
+  },
+  "TimelineApieventsidDELETE14980D25": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "EventHandler0ACBF035",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "TimelineApieventsid7E518E6C"
+    },
+    "RestApiId": {
+     "Ref": "TimelineApiE63529F7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/TimelineApi/Default/events/{id}/DELETE/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22QQW/CMAyFf8vuIWOwy47AtNs0VHZHbuIxQ5NUtQOqov73KQkaTNrpfc9x8uws9MtSzx/gwjNjT7OOWp12Auak4ML7ZEcPLthWp09oO1SbL19gUrzUaR3NCSUXr1RlGzoy46189dWsgXFSHbjWgk5v0Ruh4HPzPW9xcMRMwU+KwOnUhJpe9BZQKU+zB2YU1qssCno6gOAFRp0aZFn1VG7fcGVMiF7UK/ZdGB36ssed2wkcSmSFBjnEwWCe/9dc36z8jvIdbC5Vmqa7vsgS3L/X/h5th3Ami4Mqe+Ro8ofc/xGlj2XGTfCWpHyNDxb1kR/Pi4V+etbzhyMTzYbohRzqpuoPNbF7aeMBAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "MainStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "TimelineApiEndpoint1961F3DC": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "TimelineApiE63529F7"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "TimelineApiDeploymentStageprodCB7C4279"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-2"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
