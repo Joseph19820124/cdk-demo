@@ -1,5 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
-import { Stack, StackProps, aws_dynamodb as ddb, aws_lambda as lambda, aws_apigateway as apigw, aws_s3 as s3 } from 'aws-cdk-lib';
+import {
+  Stack, StackProps,
+  aws_dynamodb as ddb,
+  aws_lambda_nodejs as lambdaNode,
+  aws_apigateway as apigw,
+  aws_s3 as s3
+} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export class MainStack extends Stack {
@@ -18,12 +24,17 @@ export class MainStack extends Stack {
       autoDeleteObjects: true
     });
 
-    const handler = new lambda.Function(this, 'EventHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset('lambda'),
-      handler: 'index.handler',
+    const handler = new lambdaNode.NodejsFunction(this, 'EventHandler', {
+      entry: 'lambda/index.mjs',
+      handler: 'handler',
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       environment: {
         EVENTS_TABLE: table.tableName
+      },
+      bundling: {
+        format: cdk.aws_lambda_nodejs.OutputFormat.ESM,
+        target: 'es2020',
+        externalModules: ['@aws-sdk/*']
       }
     });
 

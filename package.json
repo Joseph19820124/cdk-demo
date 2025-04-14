@@ -1,21 +1,7 @@
 {
-  "name": "ts-cdk-demo",
-  "version": "0.1.0",
-  "bin": {
-    "ts-cdk-demo": "bin/app.js"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "cdk": "cdk"
-  },
-  "devDependencies": {
-    "aws-cdk": "^2.0.0",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.0.0"
-  },
   "dependencies": {
-    "aws-cdk-lib": "2.93.0",
-    "constructs": "^10.0.0"
+    "@aws-sdk/client-dynamodb": "^3.788.0",
+    "@aws-sdk/lib-dynamodb": "^3.788.0",
+    "uuid": "^11.1.0"
   }
 }
